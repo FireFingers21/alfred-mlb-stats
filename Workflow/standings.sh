@@ -30,25 +30,29 @@ jq -cs \
     },
     "skipknowledge": true,
 	"items": (if (length != 0) then
-		reduce .[].records[].teamRecords as $r ([]; . + $r) | map({
+		reduce .[].records[].teamRecords as $r ([]; . + $r) |
+		([.[] | select(.clinchIndicator).team.division.name]) as $clinchedDivisions |
+		(map({(.team.league.name): .leagueRank})) as $leagueSeqs |
+		(map({(.team.division.name): .divisionRank})) as $divisionSeqs |
+		("") as $sportSeqs | ("") as $sport |
+		map({
 			"title": "\(.'${grouping}Rank')  \(.name)  \(.clinchIndicator | if (.) then "(\(.))" else "" end)",
 			"subtitle": "[ W: \(.wins)  L: \(.losses)  PCT: \(.pct) ]    L10: \(.record_lastTen // "-")    STRK: \(.streak // "-")    [ RS: \(.runsScored)  RA: \(.runsAllowed)  DIFF: \(.runDifferential | (if . > 0 then "+"+(.|tostring) else . end)) ]",
 			"arg": "stats",
 			"match": [
                 .'${grouping}Rank', .name,
                 (.team.division.name| . + " " + gsub("(merican |ational |eague)";"")),
-                (.wildCardRank | if (.) then "wildcard" else "" end),
-                (.clinched | if (.) then "clinched" else "" end)
+                (if (.wildCardRank) then "wildcard" else "" end),
+                (if (.clinched) then "clinched" else "" end)
             ] | map(select(.)) | join(" "),
 			"icon": { "path": "\($icons_dir)/\(.id).png" },
 			"text": { "copy": .name },
 			"variables": {
-			    "teamId": .id,
-				"teamName": .name,
-				"seq": .'${grouping}Rank',
+			    "teamId": .id, "teamName": .name, "seq": .'${grouping}Rank',
 				"divSeq": (.team.division.name | if (contains("East")) then 1 elif (contains("Central")) then 2 elif (contains("West")) then 3 else 4 end),
 				"league": .team.league.name,
 				"division": (.team.division.name|gsub("(merican |ational |eague)";"")),
+				"divFullName": .team.division.name
 			},
 			"mods": {
 			    "cmd": {"subtitle": "⌘↩ Sort by Division", "arg": "", "variables": {"grouping":"division"}},
@@ -57,8 +61,13 @@ jq -cs \
 			}
 		}) | (if ($grouping != "sport") then ([
 		    (.[] | select((.variables.seq) == 1)) |
-		    (. |= {"title":"——  \(.variables.league)  ——", "subtitle":(if ($grouping == "division") then .variables.division else "" end), "valid": false, "variables":.variables, "mods":.mods, "match":"\(.variables.league) \(.variables.division) wildcard clinched"}) |
-			(.variables.seq |= 0) | (.variables.teamName |= "")
+		    (. |= (.variables.divFullName) as $division | (.variables.league) as $league | {
+				"title":"—————  \($league)  —————",
+				"subtitle":(if ($grouping == "division") then (.variables.division | " "*(46-length/2)+.) else "" end),
+				"icon": {"path":"images/iconLarge.png"},
+				"match":"\($league) \(.variables.division) \($'${grouping}Seqs' | map(."\($'${grouping}')" | select(.)) | join(" ")) \(if ($clinchedDivisions | contains([$division])) then "clinched" else "" end) wildcard",
+				"variables": .variables, "mods":.mods, "valid": false
+			}) | (.variables.seq |= 0) | (.variables.teamName |= "")
 		]+.) end)
 		| (if ($grouping == "sport") then sort_by(.variables.seq) elif ($grouping == "league") then sort_by(.variables.league, .variables.seq) elif ($grouping == "division") then sort_by(.variables.league, .variables.divSeq, .variables.seq) end)
 		| [(.[] | select(($grouping == "sport" and .variables.seq == 1) | not) | select((.variables.teamName|ascii_downcase) == $favTeam)) | (.match |= "")] + .
