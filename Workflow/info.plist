@@ -101,7 +101,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>210AB6D9-E37D-4A72-B130-528568776620</string>
+				<string>D4C5F95B-CA8E-4CE6-B248-3600C8E276CC</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -681,31 +681,6 @@
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>68</integer>
-				<key>script</key>
-				<string>on run argv
-	tell application id "com.runningwithcrayons.Alfred" to reveal workflow (system attribute "alfred_workflow_bundleid") with configuration
-end run</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>6</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>210AB6D9-E37D-4A72-B130-528568776620</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
 	</array>
 	<key>readme</key>
 	<string>## Setup
@@ -744,15 +719,6 @@ Configure the [Hotkey](https://www.alfredapp.com/help/workflows/triggers/hotkey/
 			<real>345</real>
 			<key>ypos</key>
 			<real>130</real>
-		</dict>
-		<key>210AB6D9-E37D-4A72-B130-528568776620</key>
-		<dict>
-			<key>colorindex</key>
-			<integer>11</integer>
-			<key>xpos</key>
-			<real>315</real>
-			<key>ypos</key>
-			<real>665</real>
 		</dict>
 		<key>21AA0846-593F-4C61-AE67-E0211DA2546A</key>
 		<dict>
@@ -987,8 +953,6 @@ Configure the [Hotkey](https://www.alfredapp.com/help/workflows/triggers/hotkey/
 			<string>grouping</string>
 		</dict>
 	</array>
-	<key>variablesdontexport</key>
-	<array/>
 	<key>version</key>
 	<string>2026.3</string>
 	<key>webaddress</key>

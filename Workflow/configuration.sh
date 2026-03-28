@@ -18,6 +18,7 @@ cat << EOB
 	{
 		"title": "Configure Workflow...",
 		"subtitle": "Open the configuration window for ${alfred_workflow_name}",
+		"arg": "alfredpreferences://navigateto/workflows>workflow>${alfred_workflow_uid}>userconfig",
 		"variables": { "pref_id": "configure" }
 	}
 ]}
