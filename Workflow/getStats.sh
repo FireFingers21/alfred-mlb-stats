@@ -25,8 +25,9 @@ else
 fi
 
 # Format Stats to Markdown
-lastUpdatedDate="$(date -r "${hitting_stats_file}" +%Y-%m-%d)"
-mdOutput=$(jq -crs --argjson teamId "${teamId}" --arg division "${division}" --arg icons_dir "${icons_dir}" --arg lastUpdatedDate "${lastUpdatedDate}" \
+if [[ -f "${hitting_stats_file}" ]]; then
+    lastUpdatedDate="$(date -r "${hitting_stats_file}" +%Y-%m-%d)"
+    mdOutput=$(jq -crs --argjson teamId "${teamId}" --arg division "${division}" --arg icons_dir "${icons_dir}" --arg lastUpdatedDate "${lastUpdatedDate}" \
 '[.[].stats[] | select(.teamId == $teamId)] |
 40 as $spaces |
     "![Team Logo](\($icons_dir)/\($teamId)small.png)\n",
@@ -79,6 +80,11 @@ mdOutput=$(jq -crs --argjson teamId "${teamId}" --arg division "${division}" --a
     ("Batting Average Against:"|.+" "*($spaces-length))+"\(.[1].avg)",
     "```"
 ' "${hitting_stats_file}" "${pitching_stats_file}" | sed 's/\"/\\"/g')
+else
+    lastUpdatedDate="$(date -r "${alfred_workflow_data}" +%Y-%m-%d)"
+    [[ -f "${alfred_workflow_data}" ]] && minutes="$((($(date +%s)-$(date -r "${alfred_workflow_data}" +%s))/60))"
+    mdOutput="![Team Logo](${icons_dir}/${teamId}small.png)\n# ${teamName}\n**Games Played:** N/A      ·      **Points:** N/A      ·      **Date**: ${lastUpdatedDate}\n***\n*No Team Stats available*"
+fi
 
 # Output Formatted Stats to Text View
 cat << EOB
