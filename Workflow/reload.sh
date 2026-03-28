@@ -8,8 +8,8 @@ seasonDir="${alfred_workflow_data}/${seasonYear}"
 mkdir -p "${seasonDir}"
 curl -sf --compressed --parallel --connect-timeout 10 \
     -L "https://bdfed.stitch.mlbinfra.com/bdfed/transform-mlb-standings?&standingsView=division&season=${seasonYear}&leagueIds=103&leagueIds=104&standingsTypes=regularSeason&hydrateAlias=noSchedule" -o "${seasonDir}/standings.json" \
-    -L "https://bdfed.stitch.mlbinfra.com/bdfed/stats/team?&env=prod&gameType=S&group=hitting&stats=season&season=${seasonYear}" -o "${seasonDir}/hittingStats.json" \
-    -L "https://bdfed.stitch.mlbinfra.com/bdfed/stats/team?&env=prod&gameType=S&group=pitching&stats=season&season=${seasonYear}" -o "${seasonDir}/pitchingStats.json" \
+    -L "https://bdfed.stitch.mlbinfra.com/bdfed/stats/team?&env=prod&gameType=R&group=hitting&stats=season&season=${seasonYear}" -o "${seasonDir}/hittingStats.json" \
+    -L "https://bdfed.stitch.mlbinfra.com/bdfed/stats/team?&env=prod&gameType=R&group=pitching&stats=season&season=${seasonYear}" -o "${seasonDir}/pitchingStats.json" \
 && downloadStatus=1
 
 if [[ -n "${downloadStatus}" ]]; then
