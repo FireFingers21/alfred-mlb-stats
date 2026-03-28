@@ -954,7 +954,7 @@ Configure the [Hotkey](https://www.alfredapp.com/help/workflows/triggers/hotkey/
 		</dict>
 	</array>
 	<key>version</key>
-	<string>2026.3</string>
+	<string>2026.3.1</string>
 	<key>webaddress</key>
 	<string>https://github.com/FireFingers21/alfred-mlb-stats</string>
 </dict>
