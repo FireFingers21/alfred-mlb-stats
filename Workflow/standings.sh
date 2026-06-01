@@ -36,7 +36,7 @@ jq -cs \
 		(map({(.team.division.name): .divisionRank})) as $divisionSeqs |
 		("") as $sportSeqs | ("") as $sport |
 		map({
-			"title": "\(.'${grouping}Rank')  \(.name)  \(.clinchIndicator | if (.) then "(\(.))" else "" end)",
+			"title": "\(.'${grouping}Rank')  \(.name)  \(.clinchIndicator | if (.) then "(\(.))" else "" end)  \(if ((.name|ascii_downcase) == $favTeam) then "★" else "" end)",
 			"subtitle": "[ W: \(.wins)  L: \(.losses)  PCT: \(.pct) ]    L10: \(.record_lastTen // "-")    STRK: \(.streak // "-")    [ RS: \(.runsScored)  RA: \(.runsAllowed)  DIFF: \(.runDifferential | (if . > 0 then "+"+(.|tostring) else . end)) ]",
 			"arg": "stats",
 			"match": [
@@ -70,8 +70,7 @@ jq -cs \
 			}) | (.variables.seq |= 0) | (.variables.teamName |= "")
 		]+.) end)
 		| (if ($grouping == "sport") then sort_by(.variables.seq) elif ($grouping == "league") then sort_by(.variables.league, .variables.seq) elif ($grouping == "division") then sort_by(.variables.league, .variables.divSeq, .variables.seq) end)
-		| [(.[] | select(($grouping == "sport" and .variables.seq == 1) | not) | select((.variables.teamName|ascii_downcase) == $favTeam)) | (.match |= "")] + .
-		| [(.[] | if ((.variables.teamName|ascii_downcase) == $favTeam) then (.title |= .+"  ★") end)]
+		| [(.[] | select(($grouping == "sport" and .variables.seq == 1) | not) | select(.variables.seq != 0 and (.variables.teamName|ascii_downcase) == $favTeam)) | (.match |= "")] + .
 	else
 		[{
 			"title": "No Standings Found",
