@@ -7,40 +7,30 @@ seasonDir="${alfred_workflow_data}/${seasonYear}"
 # Auto Update
 set -o extendedglob
 [[ -f ${alfred_workflow_data}/*/*(#i)standings.json(#qNY1) ]] \
-&& [[ "$(date -r "${alfred_workflow_data}" +%s)" -lt "$(date -v -"${autoUpdate}"M +%s)" || ! -d "${alfred_workflow_data}/${seasonYear}" ]] && reload=$(./reload.sh)
-
-# Get season files
-standings_file="${seasonDir}/standings.json"
-hitting_stats_file="${seasonDir}/hittingStats.json"
-pitching_stats_file="${seasonDir}/pitchingStats.json"
-icons_dir="${seasonDir}/icons"
+&& [[ "$(date -r "${alfred_workflow_data}" +%s)" -lt "$(date -v -"${autoUpdate}"M +%s)" || ! -d "${seasonDir}" ]] && reload=$(./reload.sh)
 
 # Load Standings
 jq -cs \
-   --arg icons_dir "${icons_dir}" \
-   --arg favTeam "${(L)favTeam}" \
+   --arg favTeam "$(iconv -f UTF-8-MAC -t UTF-8 <<< ${(L)favTeam})" \
    --arg grouping "${grouping}" \
+   --arg icons_dir "${seasonDir}/icons" \
+   --arg seasonYear "${seasonYear}" \
 '{
     "variables": {
-        "seasonYear": "'${seasonYear}'",
-        "standings_file": "'${standings_file}'",
-        "hitting_stats_file": "'${hitting_stats_file}'",
-        "pitching_stats_file": "'${pitching_stats_file}'",
-        "icons_dir": "'${icons_dir}'"
+        "icons_dir": $icons_dir,
+        "seasonYear": $seasonYear
     },
     "skipknowledge": true,
 	"items": (if (length != 0) then
-		reduce .[].records[].teamRecords as $r ([]; . + $r) |
+		reduce .[0].records[].teamRecords as $r ([]; . + $r) |
 		([.[] | select(.clinchIndicator).team.division.name]) as $clinchedDivisions |
-		(map({(.team.league.name): .leagueRank})) as $leagueSeqs |
-		(map({(.team.division.name): .divisionRank})) as $divisionSeqs |
-		("") as $sportSeqs | ("") as $sport |
+		(if ($grouping != "sport") then map({(.team."\($grouping)".name): ."\($grouping)Sequence"}) else "" end) as $groupingSeqs |
 		map({
-			"title": "\(.'${grouping}Rank')  \(.name)  \(.clinchIndicator | if (.) then "(\(.))" else "" end)  \(if ((.name|ascii_downcase) == $favTeam) then "★" else "" end)",
+			"title": "\(."\($grouping)Rank")  \(.name)  \(.clinchIndicator | if (.) then "(\(.))" else "" end)  \(if ((.name|ascii_downcase) == $favTeam) then "★" else "" end)",
 			"subtitle": "[ W: \(.wins)  L: \(.losses)  PCT: \(.pct) ]    L10: \(.record_lastTen // "-")    STRK: \(.streak // "-")    [ RS: \(.runsScored)  RA: \(.runsAllowed)  DIFF: \(.runDifferential | (if . > 0 then "+"+(.|tostring) else . end)) ]",
 			"arg": "stats",
 			"match": [
-                .'${grouping}Rank', .name,
+                ."\($grouping)Rank", .name,
                 (.team.division.name| . + " " + gsub("(merican |ational |eague)";"")),
                 (if (.wildCardRank) then "wildcard" else "" end),
                 (if (.clinched) then "clinched" else "" end)
@@ -48,7 +38,7 @@ jq -cs \
 			"icon": { "path": "\($icons_dir)/\(.id).png" },
 			"text": { "copy": .name },
 			"variables": {
-			    "teamId": .id, "teamName": .name, "seq": .'${grouping}Rank',
+			    "teamId": .id, "teamName": .name, "seq": ."\($grouping)Rank",
 				"divSeq": (.team.division.name | if (contains("East")) then 1 elif (contains("Central")) then 2 elif (contains("West")) then 3 else 4 end),
 				"league": .team.league.name,
 				"division": (.team.division.name|gsub("(merican |ational |eague)";"")),
@@ -60,12 +50,12 @@ jq -cs \
 			    "ctrl": {"subtitle": "⌃↩ Sort by Sport", "arg": "", "variables": {"grouping":"sport"}}
 			}
 		}) | (if ($grouping != "sport") then ([
-		    (.[] | select((.variables.seq) == 1)) |
+		    (unique_by(.variables."\($grouping)")[] | select((.variables.seq) == 1)) |
 		    (. |= (.variables.divFullName) as $division | (.variables.league) as $league | {
 				"title":"—————  \($league)  —————",
 				"subtitle":(if ($grouping == "division") then (.variables.division | " "*(46-length/2)+.) else "" end),
 				"icon": {"path":"images/iconLarge.png"},
-				"match":"\($league) \(.variables.division) \($'${grouping}Seqs' | map(."\($'${grouping}')" | select(.)) | join(" ")) \(if ($clinchedDivisions | contains([$division])) then "clinched" else "" end) wildcard",
+				"match":"\($league) \(.variables.division) \($groupingSeqs | map(."\($grouping)" | select(.)) | join(" ")) \(if ($clinchedDivisions | contains([$division])) then "clinched" else "" end) wildcard",
 				"variables": .variables, "mods":.mods, "valid": false
 			}) | (.variables.seq |= 0) | (.variables.teamName |= "")
 		]+.) end)
@@ -78,4 +68,4 @@ jq -cs \
 			"arg": "reload"
 		}]
 	end)
-}' "${standings_file}"
+}' "${seasonDir}/standings.json"
