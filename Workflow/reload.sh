@@ -6,7 +6,7 @@ seasonDir="${alfred_workflow_data}/${seasonYear}"
 
 # Get season standings
 mkdir -p "${seasonDir}"
-curl -sf --compressed --parallel --connect-timeout 10 \
+curl -sf --compressed --parallel --max-time 10 \
     -L "https://bdfed.stitch.mlbinfra.com/bdfed/transform-mlb-standings?&standingsView=division&season=${seasonYear}&leagueIds=103&leagueIds=104&standingsTypes=regularSeason&hydrateAlias=noSchedule" -o "${seasonDir}/standings.json" \
     -L "https://bdfed.stitch.mlbinfra.com/bdfed/stats/team?&env=prod&gameType=R&group={hitting,pitching}&stats=season&season=${seasonYear}" -o "${seasonDir}/#1Stats.json" \
 && downloadStatus=1
@@ -17,7 +17,7 @@ if [[ -n "${downloadStatus}" ]]; then
         # Get Team Logos
         mkdir -p "${seasonDir}/icons"
         teamLogos="$(jq -r '[.records[].teamRecords[].id] | join(",")' "${seasonDir}/standings.json")"
-        curl -sf --compressed --parallel --output-dir "${seasonDir}/icons" -L "https://midfield.mlbstatic.com/v1/team/{${teamLogos}}/spots/256" -o "#1.png"
+        curl -sf --compressed --parallel --max-time 10 --output-dir "${seasonDir}/icons" -L "https://midfield.mlbstatic.com/v1/team/{${teamLogos}}/spots/256" -o "#1.png"
     fi
     touch "${alfred_workflow_data}"
     printf "Standings Updated"
